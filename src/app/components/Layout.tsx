@@ -39,7 +39,7 @@ const Layout: React.FC<LayoutProps> = ({ children }) => {
                 animate={{ opacity: 1 }}
                 transition={{ duration: 0.5, delay: 0.5 }}
             >
-                <p>© {new Date().getFullYear()} TextShare — Secure text sharing</p>
+                <p>© {new Date().getFullYear()} Pastro — Secure text sharing</p>
             </motion.footer>
         </div>
     );

@@ -188,7 +188,7 @@ const CreateSnippet = () => {
                                 onClick={() => {
                                     if (navigator.share) {
                                         navigator.share({
-                                            title: 'TextShare Snippet',
+                                            title: 'Pastro Snippet',
                                             text: isProtected
                                                 ? 'I\'ve shared a password-protected snippet with you'
                                                 : `Access my shared text with code: ${code}`,
