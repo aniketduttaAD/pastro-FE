@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, Suspense } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useSearchParams } from 'next/navigation';
 import Layout from './components/Layout';
@@ -8,26 +8,19 @@ import CreateSnippet from './components/CreateSnippet';
 import RetrieveSnippet from './components/RetrieveSnippet';
 import { FiPlus, FiSearch } from 'react-icons/fi';
 
-export default function Home() {
+function TabContainer() {
   const [activeTab, setActiveTab] = useState<'create' | 'retrieve'>('create');
-  const [mounted, setMounted] = useState(false);
   const searchParams = useSearchParams();
 
   useEffect(() => {
-    setMounted(true);
-
     const code = searchParams?.get('code');
     if (code) {
       setActiveTab('retrieve');
     }
   }, [searchParams]);
 
-  if (!mounted) {
-    return null;
-  }
-
   return (
-    <Layout>
+    <>
       <div className="my-6">
         <div className="hidden sm:block">
           <div className="border-b border-gray-200 dark:border-gray-700">
@@ -77,6 +70,26 @@ export default function Home() {
           {activeTab === 'create' ? <CreateSnippet /> : <RetrieveSnippet />}
         </motion.div>
       </AnimatePresence>
+    </>
+  );
+}
+
+export default function Home() {
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return (
+    <Layout>
+      <Suspense fallback={<div>Loading...</div>}>
+        <TabContainer />
+      </Suspense>
     </Layout>
   );
 }
