@@ -1,103 +1,115 @@
-import Image from "next/image";
+'use client';
+
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { useSearchParams } from 'next/navigation';
+import Layout from './components/Layout';
+import CreateSnippet from './components/CreateSnippet';
+import RetrieveSnippet from './components/RetrieveSnippet';
+import { FiPlus, FiSearch } from 'react-icons/fi';
 
 export default function Home() {
-  return (
-    <div className="grid grid-rows-[20px_1fr_20px] items-center justify-items-center min-h-screen p-8 pb-20 gap-16 sm:p-20 font-[family-name:var(--font-geist-sans)]">
-      <main className="flex flex-col gap-[32px] row-start-2 items-center sm:items-start">
-        <Image
-          className="dark:invert"
-          src="/next.svg"
-          alt="Next.js logo"
-          width={180}
-          height={38}
-          priority
-        />
-        <ol className="list-inside list-decimal text-sm/6 text-center sm:text-left font-[family-name:var(--font-geist-mono)]">
-          <li className="mb-2 tracking-[-.01em]">
-            Get started by editing{" "}
-            <code className="bg-black/[.05] dark:bg-white/[.06] px-1 py-0.5 rounded font-[family-name:var(--font-geist-mono)] font-semibold">
-              src/app/page.tsx
-            </code>
-            .
-          </li>
-          <li className="tracking-[-.01em]">
-            Save and see your changes instantly.
-          </li>
-        </ol>
+  const [activeTab, setActiveTab] = useState<'create' | 'retrieve'>('create');
+  const [mounted, setMounted] = useState(false);
+  const searchParams = useSearchParams();
 
-        <div className="flex gap-4 items-center flex-col sm:flex-row">
-          <a
-            className="rounded-full border border-solid border-transparent transition-colors flex items-center justify-center bg-foreground text-background gap-2 hover:bg-[#383838] dark:hover:bg-[#ccc] font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 sm:w-auto"
-            href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            <Image
-              className="dark:invert"
-              src="/vercel.svg"
-              alt="Vercel logomark"
-              width={20}
-              height={20}
-            />
-            Deploy now
-          </a>
-          <a
-            className="rounded-full border border-solid border-black/[.08] dark:border-white/[.145] transition-colors flex items-center justify-center hover:bg-[#f2f2f2] dark:hover:bg-[#1a1a1a] hover:border-transparent font-medium text-sm sm:text-base h-10 sm:h-12 px-4 sm:px-5 w-full sm:w-auto md:w-[158px]"
-            href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            Read our docs
-          </a>
+  useEffect(() => {
+    setMounted(true);
+
+    const code = searchParams?.get('code');
+    if (code) {
+      setActiveTab('retrieve');
+    }
+  }, [searchParams]);
+
+  if (!mounted) {
+    return null;
+  }
+
+  return (
+    <Layout>
+      <div className="my-6">
+        <div className="hidden sm:block">
+          <div className="border-b border-gray-200 dark:border-gray-700">
+            <nav className="-mb-px flex space-x-8" aria-label="Tabs">
+              <TabButton
+                isActive={activeTab === 'create'}
+                onClick={() => setActiveTab('create')}
+                icon={<FiPlus className="mr-2" />}
+                label="Create"
+              />
+              <TabButton
+                isActive={activeTab === 'retrieve'}
+                onClick={() => setActiveTab('retrieve')}
+                icon={<FiSearch className="mr-2" />}
+                label="Retrieve"
+              />
+            </nav>
+          </div>
         </div>
-      </main>
-      <footer className="row-start-3 flex gap-[24px] flex-wrap items-center justify-center">
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
+
+        <div className="sm:hidden">
+          <div className="grid grid-cols-2 gap-2 mt-2 mb-4">
+            <MobileTabButton
+              isActive={activeTab === 'create'}
+              onClick={() => setActiveTab('create')}
+              icon={<FiPlus className="mr-2" />}
+              label="Create"
+            />
+            <MobileTabButton
+              isActive={activeTab === 'retrieve'}
+              onClick={() => setActiveTab('retrieve')}
+              icon={<FiSearch className="mr-2" />}
+              label="Retrieve"
+            />
+          </div>
+        </div>
+      </div>
+
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, y: 10 }}
+          animate={{ opacity: 1, y: 0 }}
+          exit={{ opacity: 0, y: -10 }}
+          transition={{ duration: 0.3 }}
         >
-          <Image
-            aria-hidden
-            src="/file.svg"
-            alt="File icon"
-            width={16}
-            height={16}
-          />
-          Learn
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/window.svg"
-            alt="Window icon"
-            width={16}
-            height={16}
-          />
-          Examples
-        </a>
-        <a
-          className="flex items-center gap-2 hover:underline hover:underline-offset-4"
-          href="https://nextjs.org?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <Image
-            aria-hidden
-            src="/globe.svg"
-            alt="Globe icon"
-            width={16}
-            height={16}
-          />
-          Go to nextjs.org →
-        </a>
-      </footer>
-    </div>
+          {activeTab === 'create' ? <CreateSnippet /> : <RetrieveSnippet />}
+        </motion.div>
+      </AnimatePresence>
+    </Layout>
   );
 }
+
+interface TabButtonProps {
+  isActive: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}
+
+const TabButton: React.FC<TabButtonProps> = ({ isActive, onClick, icon, label }) => (
+  <button
+    onClick={onClick}
+    className={`${isActive
+      ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
+      : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300 dark:hover:border-gray-600'
+      } flex items-center whitespace-nowrap py-4 px-1 border-b-2 font-medium transition-colors duration-200`}
+  >
+    {icon}
+    {label}
+  </button>
+);
+
+const MobileTabButton: React.FC<TabButtonProps> = ({ isActive, onClick, icon, label }) => (
+  <button
+    onClick={onClick}
+    className={`${isActive
+      ? 'bg-indigo-100 text-indigo-700 border-indigo-200 dark:bg-indigo-900 dark:text-indigo-200 dark:border-indigo-800'
+      : 'bg-white text-gray-500 border-gray-200 dark:bg-gray-800 dark:text-gray-400 dark:border-gray-700'
+      } flex items-center justify-center py-2 px-3 border rounded-md font-medium transition-colors duration-200`}
+  >
+    {icon}
+    {label}
+  </button>
+);

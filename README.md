@@ -1,36 +1,67 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Pastro (Next.js Edition)
 
-## Getting Started
+**Paste. Share. Go.**
 
-First, run the development server:
+Pastro is a pastebin-style web application built with Next.js. It allows users to quickly paste, share, and retrieve text snippets using a minimal and modern UI.
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
-```
+---
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## 🚀 Getting Started
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+### 1. Install Dependencies
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+First, install project dependencies:
 
-## Learn More
+    npm install
 
-To learn more about Next.js, take a look at the following resources:
+### 2. Set Up Environment Variables
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+Create a `.env.local` file in the root directory and add the following:
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+    NEXT_PUBLIC_API_BASE_URL=http://localhost:5001
 
-## Deploy on Vercel
+Update the value of `NEXT_PUBLIC_API_BASE_URL` to match your backend API base URL (e.g., if you're running an Express server locally).
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+### 3. Run the Development Server
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Start the Next.js development server:
+
+    npm run dev
+    # or
+    yarn dev
+    # or
+    pnpm dev
+
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
+
+---
+
+## 🧠 What This App Does
+
+- 🔍 Paste any text or code snippet  
+- 🔗 Generate a unique URL to share your snippet  
+- 🧾 View raw or formatted snippets  
+- 🌙 Clean, responsive UI with optional dark mode  
+- ⚡ Fast, server-rendered pages using Next.js App Router
+
+---
+
+## 📚 Learn More
+
+- [Next.js Documentation](https://nextjs.org/docs)  
+- [API Routes in Next.js](https://nextjs.org/docs/app/building-your-application/routing/route-handlers)  
+- [Environment Variables](https://nextjs.org/docs/app/building-your-application/configuring/environment-variables)
+
+---
+
+## 📦 Deployment
+
+This app can be deployed on [Vercel](https://vercel.com) or any Node.js-compatible hosting service.
+
+Read more in the [Next.js Deployment Docs](https://nextjs.org/docs/app/building-your-application/deploying).
+
+---
+
+## 🙌 Acknowledgements
+
+Built with ❤️ using Next.js by Vercel.
