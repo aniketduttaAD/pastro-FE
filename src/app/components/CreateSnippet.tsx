@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { ExpirationTime, formatDate } from '@/app/lib/util';
 import SnippetEditor from './SnippetEditor';
 import Button from './ui/Button';
@@ -16,10 +16,12 @@ import {
     FiLink,
     FiLock,
     FiAlertTriangle,
-    FiCheck
+    FiCheck,
+    FiInfo
 } from 'react-icons/fi';
 import { showToast } from './ui/Toast';
 import { motion } from 'framer-motion';
+
 type ContentType = 'plain' | 'markdown' | 'code';
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL || 'http://localhost:5001';
@@ -37,9 +39,63 @@ const CreateSnippet = () => {
     const [expiresAt, setExpiresAt] = useState<string | null>(null);
     const [showPasswordDialog, setShowPasswordDialog] = useState(false);
     const [showAdvancedOptions, setShowAdvancedOptions] = useState(false);
+    const [contentFromClipboard, setContentFromClipboard] = useState<string | null>(null);
+    const [showPasteNotification, setShowPasteNotification] = useState(false);
+
     const isValidContent = content.trim().length > 0 && content.trim().length <= 100000;
     const isValidPassword = !isProtected || (password.length >= 4);
     const isFormValid = isValidContent && isValidPassword;
+
+    // Effect to handle clipboard content detection
+    useEffect(() => {
+        const pastePermission = async () => {
+            try {
+                if (navigator.clipboard && navigator.clipboard.readText) {
+                    const text = await navigator.clipboard.readText();
+                    if (text && text.trim()) {
+                        setContentFromClipboard(text);
+                        setShowPasteNotification(true);
+                    }
+                }
+                // eslint-disable-next-line @typescript-eslint/no-unused-vars
+            } catch (error) {
+                console.log("Clipboard permission denied or not available");
+            }
+        };
+
+        // Don't run if we already have content
+        if (!content) {
+            pastePermission();
+        }
+    }, [content]);
+
+    // Handle paste detection notification
+    const handlePasteContent = () => {
+        if (contentFromClipboard) {
+            setContent(contentFromClipboard);
+            setShowPasteNotification(false);
+
+            // If clipboard content appears to be code, set content type to code
+            if (contentFromClipboard.includes('{') ||
+                contentFromClipboard.includes('def ') ||
+                contentFromClipboard.includes('function ') ||
+                contentFromClipboard.includes('import ') ||
+                contentFromClipboard.includes('class ') ||
+                contentFromClipboard.includes(';') ||
+                contentFromClipboard.includes('//')) {
+                setContentType('code');
+
+                // Try to detect language
+                if (contentFromClipboard.includes('def ') && contentFromClipboard.includes(':')) {
+                    setLanguage('python');
+                } else if (contentFromClipboard.includes('import React')) {
+                    setLanguage('jsx');
+                } else if (contentFromClipboard.includes('function ') || contentFromClipboard.includes('=>')) {
+                    setLanguage('javascript');
+                }
+            }
+        }
+    };
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -87,7 +143,6 @@ const CreateSnippet = () => {
 
             setCode(data.code);
             setExpiresAt(formatDate(new Date(data.expiresAt)));
-            // showToast.success('Snippet created successfully!');
 
             // Copy link to clipboard after successful creation
             const baseUrl = window.location.origin;
@@ -116,7 +171,8 @@ const CreateSnippet = () => {
         setIsProtected(false);
         setPassword('');
         setShowAdvancedOptions(false);
-        // showToast.info('Ready to create a new snippet');
+        setContentFromClipboard(null);
+        setShowPasteNotification(false);
     };
 
     const copyLinkToClipboard = () => {
@@ -225,6 +281,33 @@ const CreateSnippet = () => {
 
     return (
         <FadeIn className="mt-6">
+            {showPasteNotification && contentFromClipboard && (
+                <div className="mb-4 p-4 bg-indigo-900/30 border border-indigo-700/50 rounded-lg shadow-lg">
+                    <div className="flex items-start">
+                        <div className="flex-shrink-0">
+                            <FiInfo className="h-5 w-5 text-indigo-400" />
+                        </div>
+                        <div className="ml-3 flex-1">
+                            <p className="text-sm text-indigo-200">
+                                Clipboard content detected. Would you like to use it?
+                            </p>
+                            <div className="mt-2 flex space-x-3">
+                                <Button size="sm" onClick={handlePasteContent}>
+                                    Use Clipboard Content
+                                </Button>
+                                <Button
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={() => setShowPasteNotification(false)}
+                                >
+                                    Dismiss
+                                </Button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            )}
+
             <form onSubmit={handleSubmit}>
                 <Card>
                     <SnippetEditor
@@ -242,9 +325,6 @@ const CreateSnippet = () => {
                             type="button"
                             onClick={() => {
                                 setShowAdvancedOptions(!showAdvancedOptions);
-                                if (!showAdvancedOptions) {
-                                    // showToast.info('Advanced options displayed');
-                                }
                             }}
                             className="text-sm text-indigo-400 hover:text-indigo-300 focus:outline-none focus:underline transition duration-200"
                         >
@@ -267,11 +347,6 @@ const CreateSnippet = () => {
                                             checked={isProtected}
                                             onChange={(e) => {
                                                 setIsProtected(e.target.checked);
-                                                if (e.target.checked) {
-                                                    // showToast.info('Password protection enabled');
-                                                } else {
-                                                    // showToast.info('Password protection disabled');
-                                                }
                                             }}
                                             className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-600 rounded"
                                         />

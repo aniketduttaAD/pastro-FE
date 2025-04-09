@@ -55,12 +55,31 @@ const SnippetEditor: React.FC<SnippetEditorProps> = ({
 
     const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setLanguage(e.target.value);
-        if (e.target.value) {
-        }
     };
 
     const handleExpirationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setExpirationDays(Number(e.target.value) as ExpirationTime);
+    };
+
+    // Handle paste event specifically for code to preserve indentation
+    const handlePaste = (e: React.ClipboardEvent<HTMLTextAreaElement>) => {
+        if (contentType === 'code') {
+            e.preventDefault();
+            const pastedText = e.clipboardData.getData('text');
+            const textarea = textareaRef.current!;
+            const startPos = textarea.selectionStart;
+            const endPos = textarea.selectionEnd;
+            const newContent =
+                content.substring(0, startPos) +
+                pastedText +
+                content.substring(endPos);
+            setContent(newContent);
+            setTimeout(() => {
+                textarea.selectionStart = startPos + pastedText.length;
+                textarea.selectionEnd = startPos + pastedText.length;
+                textarea.focus();
+            }, 0);
+        }
     };
 
     return (
@@ -85,7 +104,13 @@ const SnippetEditor: React.FC<SnippetEditorProps> = ({
                         }
                         value={content}
                         onChange={(e) => setContent(e.target.value)}
-                        style={{ maxHeight: `${MAX_HEIGHT}px` }}
+                        onPaste={handlePaste}
+                        style={{
+                            maxHeight: `${MAX_HEIGHT}px`,
+                            tabSize: contentType === 'code' ? 4 : 2,
+                            whiteSpace: contentType === 'code' ? 'pre' : 'pre-wrap'
+                        }}
+                        spellCheck={contentType !== 'code'}
                     ></textarea>
                 </div>
             </div>
@@ -95,7 +120,7 @@ const SnippetEditor: React.FC<SnippetEditorProps> = ({
                     <label className="block text-sm font-medium text-gray-100 mb-2">
                         Content Type
                     </label>
-                    <div className="grid grid-cols-2 gap-3">
+                    <div className="grid grid-cols-3 gap-3">
                         <ContentTypeButton
                             active={contentType === 'plain'}
                             onClick={() => handleContentTypeChange('plain')}
@@ -179,6 +204,12 @@ const SnippetEditor: React.FC<SnippetEditorProps> = ({
             {contentType === 'markdown' && (
                 <div className="text-xs text-gray-400 italic">
                     <p>Markdown formatting is supported, including headings, lists, links, and code blocks.</p>
+                </div>
+            )}
+
+            {contentType === 'code' && (
+                <div className="text-xs text-gray-400 italic">
+                    <p>Code indentation and formatting will be preserved exactly as pasted. Tab size is set to 4 spaces.</p>
                 </div>
             )}
         </FadeIn>

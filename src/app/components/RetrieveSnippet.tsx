@@ -9,7 +9,6 @@ import Dialog from './ui/Dialog';
 import PasswordField from './ui/PasswordField';
 import FadeIn from './animations/FadeIn';
 import { SlideIn } from './animations/SlideIn';
-import PDFModal from '@/app/components/PdfViewerModal';
 import {
     FiSearch,
     FiArrowLeft,
@@ -18,7 +17,8 @@ import {
     FiEye,
     FiClock,
     FiExternalLink,
-    FiFileText
+    FiCopy,
+    FiCheck
 } from 'react-icons/fi';
 import { showToast } from './ui/Toast';
 
@@ -42,11 +42,11 @@ const RetrieveSnippet = () => {
     const [password, setPassword] = useState('');
     const [passwordError, setPasswordError] = useState<string | undefined>(undefined);
     const [countdown, setCountdown] = useState<number | null>(null);
-    const [contentType, setContentType] = useState<'website' | 'pdf' | 'other' | null>(null);
-    const [showPdfModal, setShowPdfModal] = useState(false);
+    const [contentType, setContentType] = useState<'website' | 'other' | null>(null);
+    const [copySuccess, setCopySuccess] = useState(false);
     const timerRef = useRef<NodeJS.Timeout | null>(null);
 
-    const detectContentType = (content: string): 'website' | 'pdf' | 'other' => {
+    const detectContentType = (content: string): 'website' | 'other' => {
         const isUrl = (str: string) => {
             try {
                 new URL(str);
@@ -57,33 +57,28 @@ const RetrieveSnippet = () => {
         };
         const trimmedContent = content.trim();
 
-        if (!isUrl(trimmedContent)) {
-            return 'other';
+        if (isUrl(trimmedContent)) {
+            return 'website';
         }
-        if (trimmedContent.toLowerCase().endsWith('.pdf') ||
-            trimmedContent.toLowerCase().includes('/pdf/') ||
-            trimmedContent.toLowerCase().includes('application/pdf') ||
-            trimmedContent.toLowerCase().includes('drive.google.com') && trimmedContent.toLowerCase().includes('.pdf')) {
-            return 'pdf';
-        }
-        return 'website';
+        return 'other';
     };
 
     const openContent = useCallback(() => {
-        if (!snippet || !contentType || contentType === 'other') return;
+        if (!snippet || !contentType || contentType !== 'website') return;
 
         const trimmedContent = snippet.content.trim();
 
         try {
             new URL(trimmedContent);
-
-            if (contentType === 'pdf') {
-                setShowPdfModal(true);
-            } else {
-                window.open(trimmedContent, '_blank', 'noopener,noreferrer');
-            }
-
-            // showToast.success(`Opening ${contentType === 'pdf' ? 'PDF' : 'website'} in ${contentType === 'pdf' ? 'viewer' : 'new tab'}`);
+            // Create a temporary anchor element instead of using window.open
+            const link = document.createElement('a');
+            link.href = trimmedContent;
+            link.target = '_blank';
+            link.rel = 'noopener noreferrer';
+            // Add to DOM, click, and remove to avoid popup blockers
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
             showToast.error(`Invalid URL: ${trimmedContent}`);
@@ -91,7 +86,7 @@ const RetrieveSnippet = () => {
     }, [snippet, contentType]);
 
     useEffect(() => {
-        if (contentType === 'website' || contentType === 'pdf') {
+        if (contentType === 'website') {
             setCountdown(5);
 
             if (timerRef.current) {
@@ -118,6 +113,32 @@ const RetrieveSnippet = () => {
             }
         };
     }, [contentType, openContent]);
+
+    // Copy to clipboard function
+    const copyToClipboard = useCallback(() => {
+        if (!snippet) return;
+
+        navigator.clipboard.writeText(snippet.content)
+            .then(() => {
+                setCopySuccess(true);
+                showToast.success('Content copied to clipboard');
+
+                // Reset the success icon after 2 seconds
+                setTimeout(() => {
+                    setCopySuccess(false);
+                }, 2000);
+            })
+            .catch(err => {
+                showToast.error('Failed to copy: ' + err.message);
+            });
+    }, [snippet]);
+
+    // Auto-copy when snippet is successfully retrieved
+    useEffect(() => {
+        if (snippet) {
+            copyToClipboard();
+        }
+    }, [snippet, copyToClipboard]);
 
     const fetchSnippet = useCallback(async (snippetCode: string | null) => {
         setLoading(true);
@@ -282,7 +303,7 @@ const RetrieveSnippet = () => {
         setPasswordError(undefined);
         setContentType(null);
         setCountdown(null);
-        setShowPdfModal(false);
+        setCopySuccess(false);
 
         if (timerRef.current) {
             clearInterval(timerRef.current);
@@ -312,89 +333,83 @@ const RetrieveSnippet = () => {
 
     if (snippet) {
         return (
-            <>
-                <SlideIn direction="up" className="mt-6">
-                    <Card
-                        title="Retrieved Snippet"
-                        subtitle={`Created: ${snippet.createdAt}`}
-                    >
-                        {(contentType === 'website' || contentType === 'pdf') && countdown !== null && (
-                            <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md border border-blue-100 dark:border-blue-800">
-                                <div className="flex items-center justify-between">
-                                    <div className="flex items-center">
-                                        {contentType === 'pdf' ?
-                                            <FiFileText className="mr-2 text-blue-500" /> :
-                                            <FiExternalLink className="mr-2 text-blue-500" />
-                                        }
-                                        <span className="text-blue-700 dark:text-blue-300">
-                                            Opening {contentType === 'pdf' ? 'PDF' : 'website'} in {countdown} seconds...
-                                        </span>
-                                    </div>
-                                    <Button
-                                        size="sm"
-                                        variant="outline"
-                                        onClick={cancelAutoOpen}
-                                    >
-                                        Cancel
-                                    </Button>
+            <SlideIn direction="up" className="mt-6">
+                <Card
+                    title="Retrieved Snippet"
+                    subtitle={`Created: ${snippet.createdAt}`}
+                >
+                    {contentType === 'website' && countdown !== null && (
+                        <div className="mb-4 p-3 bg-blue-50 dark:bg-blue-900/30 rounded-md border border-blue-100 dark:border-blue-800">
+                            <div className="flex items-center justify-between">
+                                <div className="flex items-center">
+                                    <FiExternalLink className="mr-2 text-blue-500" />
+                                    <span className="text-blue-700 dark:text-blue-300">
+                                        Website link will open in {countdown} seconds...
+                                    </span>
                                 </div>
-                            </div>
-                        )}
-
-                        <div className="max-h-96 overflow-y-auto">
-                            <CodeDisplay
-                                content={snippet.content}
-                                contentType={snippet.contentType}
-                                language={snippet.language}
-                            />
-                        </div>
-
-                        <div className="mt-4 flex flex-wrap justify-between items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
-                            <div className="flex items-center">
-                                <FiClock className="mr-1" aria-hidden="true" />
-                                <span>Expires: {snippet.expiresAt}</span>
-                            </div>
-
-                            <div className="flex items-center">
-                                <FiEye className="mr-1" aria-hidden="true" />
-                                <span>Views: {snippet.views}</span>
-                            </div>
-                        </div>
-
-                        {(contentType === 'website' || contentType === 'pdf') && (
-                            <div className="mt-4">
                                 <Button
-                                    variant="primary"
-                                    icon={contentType === 'pdf' ? <FiFileText /> : <FiExternalLink />}
-                                    fullWidth
-                                    onClick={openContent}
+                                    size="sm"
+                                    variant="outline"
+                                    onClick={cancelAutoOpen}
                                 >
-                                    Open {contentType === 'pdf' ? 'PDF' : 'Website'}
+                                    Cancel
                                 </Button>
                             </div>
-                        )}
-                    </Card>
+                        </div>
+                    )}
 
-                    <div className="mt-4">
-                        <Button
-                            variant="outline"
-                            icon={<FiArrowLeft />}
-                            fullWidth
-                            onClick={handleReset}
-                        >
-                            Retrieve Another
-                        </Button>
+                    <div className="max-h-96 overflow-y-auto">
+                        <CodeDisplay
+                            content={snippet.content}
+                            contentType={snippet.contentType}
+                            language={snippet.language}
+                        />
                     </div>
-                </SlideIn>
 
-                {contentType === 'pdf' && (
-                    <PDFModal
-                        isOpen={showPdfModal}
-                        onClose={() => setShowPdfModal(false)}
-                        pdfUrl={snippet.content.trim()}
-                    />
-                )}
-            </>
+                    <div className="mt-4 flex flex-wrap justify-between items-center gap-2 text-sm text-gray-500 dark:text-gray-400">
+                        <div className="flex items-center">
+                            <FiClock className="mr-1" aria-hidden="true" />
+                            <span>Expires: {snippet.expiresAt}</span>
+                        </div>
+
+                        <div className="flex items-center">
+                            <FiEye className="mr-1" aria-hidden="true" />
+                            <span>Views: {snippet.views}</span>
+                        </div>
+                    </div>
+
+                    <div className="my-4 flex flex-row mx-2">
+                        <Button
+                            variant="ghost"
+                            icon={copySuccess ? <FiCheck className="text-green-500" /> : <FiCopy />}
+                            fullWidth
+                            onClick={copyToClipboard}
+                        >
+                            {copySuccess ? 'Copied!' : 'Copy to Clipboard'}
+                        </Button>
+
+                        {contentType === 'website' && (
+                            <Button
+                                variant="ghost"
+                                icon={<FiExternalLink />}
+                                fullWidth
+                                onClick={openContent}
+                            >
+                                Go to Website
+                            </Button>
+                        )}
+
+                    </div>
+                    <Button
+                        variant="outline"
+                        icon={<FiArrowLeft />}
+                        fullWidth
+                        onClick={handleReset}
+                    >
+                        Retrieve Another
+                    </Button>
+                </Card>
+            </SlideIn>
         );
     }
 
