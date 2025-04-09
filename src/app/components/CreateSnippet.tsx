@@ -87,12 +87,12 @@ const CreateSnippet = () => {
 
             setCode(data.code);
             setExpiresAt(formatDate(new Date(data.expiresAt)));
-            showToast.success('Snippet created successfully!');
+            // showToast.success('Snippet created successfully!');
 
             // Copy link to clipboard after successful creation
             const baseUrl = window.location.origin;
             navigator.clipboard.writeText(baseUrl + '?code=' + data.code);
-            showToast.copySuccess('Link copied to clipboard!');
+            showToast.copySuccess('Snippet created and link copied to clipboard!');
 
         } catch (err) {
             const message =
@@ -116,7 +116,7 @@ const CreateSnippet = () => {
         setIsProtected(false);
         setPassword('');
         setShowAdvancedOptions(false);
-        showToast.info('Ready to create a new snippet');
+        // showToast.info('Ready to create a new snippet');
     };
 
     const copyLinkToClipboard = () => {
@@ -243,7 +243,7 @@ const CreateSnippet = () => {
                             onClick={() => {
                                 setShowAdvancedOptions(!showAdvancedOptions);
                                 if (!showAdvancedOptions) {
-                                    showToast.info('Advanced options displayed');
+                                    // showToast.info('Advanced options displayed');
                                 }
                             }}
                             className="text-sm text-indigo-400 hover:text-indigo-300 focus:outline-none focus:underline transition duration-200"
@@ -268,9 +268,9 @@ const CreateSnippet = () => {
                                             onChange={(e) => {
                                                 setIsProtected(e.target.checked);
                                                 if (e.target.checked) {
-                                                    showToast.info('Password protection enabled');
+                                                    // showToast.info('Password protection enabled');
                                                 } else {
-                                                    showToast.info('Password protection disabled');
+                                                    // showToast.info('Password protection disabled');
                                                 }
                                             }}
                                             className="focus:ring-indigo-500 h-4 w-4 text-indigo-600 border-gray-600 rounded"

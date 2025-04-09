@@ -83,7 +83,7 @@ const RetrieveSnippet = () => {
                 window.open(trimmedContent, '_blank', 'noopener,noreferrer');
             }
 
-            showToast.success(`Opening ${contentType === 'pdf' ? 'PDF' : 'website'} in ${contentType === 'pdf' ? 'viewer' : 'new tab'}`);
+            // showToast.success(`Opening ${contentType === 'pdf' ? 'PDF' : 'website'} in ${contentType === 'pdf' ? 'viewer' : 'new tab'}`);
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
         } catch (err) {
             showToast.error(`Invalid URL: ${trimmedContent}`);

@@ -5,7 +5,6 @@ import { ExpirationTime, getExpirationDescription } from '@/app/lib/util';
 import { FadeIn } from '@/app/components/animations/FadeIn';
 import { motion } from 'framer-motion';
 import { FiClock, FiFileText, FiCode, FiEdit3 } from 'react-icons/fi';
-import { showToast } from '@/app/components/ui/Toast';
 
 interface SnippetEditorProps {
     content: string;
@@ -52,19 +51,16 @@ const SnippetEditor: React.FC<SnippetEditorProps> = ({
 
     const handleContentTypeChange = (type: 'plain' | 'markdown' | 'code') => {
         setContentType(type);
-        showToast.info(`Content type changed to ${type}`);
     };
 
     const handleLanguageChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setLanguage(e.target.value);
         if (e.target.value) {
-            showToast.info(`Language set to ${e.target.value}`);
         }
     };
 
     const handleExpirationChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
         setExpirationDays(Number(e.target.value) as ExpirationTime);
-        showToast.info(`Expiration set to ${getExpirationDescription(Number(e.target.value) as ExpirationTime)}`);
     };
 
     return (
