@@ -367,9 +367,6 @@ const CreateSnippet = () => {
                                             value={password}
                                             onChange={(value) => {
                                                 setPassword(value);
-                                                if (value.length < 4 && value.length > 0) {
-                                                    showToast.warning('Password must be at least 4 characters');
-                                                }
                                             }}
                                             placeholder="Enter a secure password"
                                             error={password && password.length < 4 ? "Password must be at least 4 characters" : undefined}

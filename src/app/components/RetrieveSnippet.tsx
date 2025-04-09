@@ -167,8 +167,8 @@ const RetrieveSnippet = () => {
                 throw new Error(data.error || `Failed to retrieve snippet for code "${snippetCode}" (status ${response.status})`);
             }
 
-            if (data.isProtected) {
-                setCode(snippetCode);
+            if (data.success && data.snippet?.isProtected) {
+                setCode(data.snippet.code || snippetCode);
                 setShowPasswordDialog(true);
                 setLoading(false);
                 return;
@@ -242,44 +242,54 @@ const RetrieveSnippet = () => {
                 body: JSON.stringify({ password }),
             });
 
-            const data = await response.json();
-
             if (!response.ok) {
+                let errorMessage = 'Failed to access protected snippet';
+
+                try {
+                    const errorData = await response.json();
+                    errorMessage = errorData.error || errorMessage;
+                } catch {
+                    if (response.status === 404) {
+                        errorMessage = 'Snippet not found or wrong credentials';
+                    }
+                }
+
                 if (response.status === 401) {
                     setPasswordError('Invalid password');
-                } else {
-                    throw new Error(data.error || 'Failed to access protected snippet');
+                    return;
                 }
-            } else {
-                setShowPasswordDialog(false);
-                setPassword('');
 
-                if (data.snippet) {
-                    const snippetData = {
-                        content: data.snippet.content,
-                        contentType: data.snippet.contentType,
-                        language: data.snippet.language,
-                        createdAt: formatDate(new Date(data.snippet.createdAt)),
-                        expiresAt: formatDate(new Date(data.snippet.expiresAt)),
-                        views: data.snippet.views ?? 0,
-                    };
-
-                    setSnippet(snippetData);
-
-                    const detectedType = detectContentType(data.snippet.content);
-                    setContentType(detectedType);
-                } else {
-                    throw new Error('Successfully authenticated but no snippet data received.');
-                }
+                throw new Error(errorMessage);
             }
+
+            const data = await response.json();
+
+            if (data.snippet) {
+                const snippetData = {
+                    content: data.snippet.content,
+                    contentType: data.snippet.contentType,
+                    language: data.snippet.language,
+                    createdAt: formatDate(new Date(data.snippet.createdAt)),
+                    expiresAt: formatDate(new Date(data.snippet.expiresAt)),
+                    views: data.snippet.views ?? 0,
+                };
+
+                setSnippet(snippetData);
+
+                const detectedType = detectContentType(data.snippet.content);
+                setContentType(detectedType);
+            } else {
+                throw new Error('Successfully authenticated but no snippet data received.');
+            }
+
+            setShowPasswordDialog(false);
+            setPassword('');
 
         } catch (err: unknown) {
-            if (!(err instanceof Error && err.message === 'Invalid password')) {
-                const message = err instanceof Error ? err.message : 'An unknown error occurred while accessing the snippet.';
-                setError(message);
-                showToast.error(message);
-                setShowPasswordDialog(false);
-            }
+            const message = err instanceof Error ? err.message : 'An unknown error occurred while accessing the snippet.';
+            setError(message);
+            showToast.error(message);
+            setShowPasswordDialog(false);
         } finally {
             setLoading(false);
         }
